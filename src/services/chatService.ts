@@ -31,29 +31,47 @@ export async function getChatResponse(message: string, history: any[], data: { e
 
     const systemInstruction = `
       You are SpendWise AI, a highly sophisticated and friendly personal financial advisor. 
-      You have access to the user's current financial state:
+      You have access to the user's current financial data:
       ${JSON.stringify(dataSummary, null, 2)}
       
-      Your goal is to help the user manage their money, provide specific saving tips, analyze their spending patterns, and answer questions about their budget.
-      Be concise, professional, and encouraging. Use Indian Rupees (₹) for currency units.
-      If asked for advice, look for overspending in categories or low savings rates.
+      Always use Indian Rupees (₹) for currency. Be concise, expert, and encouraging.
+      Your primary task is to help users manage their money better and provide custom saving tips.
     `;
 
-    const chat = client.chats.create({
-      model: "gemini-3-flash-preview",
-      config: {
-        systemInstruction,
-      },
-      history: history.map(h => ({
+    // Flatten history and add the latest message for a single generateContent call
+    // This is often more robust than stateful chat objects in some environments
+    const contents = [
+      ...history.map(h => ({
         role: h.role,
         parts: [{ text: h.content }]
-      }))
+      })),
+      {
+        role: 'user',
+        parts: [{ text: message }]
+      }
+    ];
+
+    const result = await client.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: contents,
+      config: {
+        systemInstruction,
+      }
     });
 
-    const result = await chat.sendMessage({ message: message });
+    if (!result.text) {
+      throw new Error("Empty response from AI");
+    }
+
     return result.text;
-  } catch (error) {
-    console.error("Chat Error:", error);
-    return "I'm sorry, I'm having trouble processing that right now. Please check if your GEMINI_API_KEY is configured correctly.";
+  } catch (error: any) {
+    console.error("SpendWise AI Error:", error);
+    
+    // Friendly error messages in Bengali and English
+    if (error.message?.includes('GEMINI_API_KEY')) {
+      return "দুঃখিত, আপনার GEMINI_API_KEY সেট করা নেই। দয়া করে নেটলিফাই বা এআই স্টুডিও সেটিংসে এটি চেক করুন। (Missing API Key)";
+    }
+    
+    return "দুঃখিত, আমি এই মুহূর্তে আপনার প্রশ্নের উত্তর দিতে পারছি না। দয়া করে কিছুক্ষণ পর আবার চেষ্টা করুন। (Connection Error)";
   }
 }
