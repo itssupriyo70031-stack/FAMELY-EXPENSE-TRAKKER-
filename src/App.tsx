@@ -93,9 +93,12 @@ export default function App() {
     try {
       await signInWithPopup(auth, googleProvider);
       toast.success('Successfully signed in!');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Failed to sign in. Please try again.');
+      const errorMessage = error.code === 'auth/unauthorized-domain' 
+        ? 'Domain not authorized. Please add your Netlify URL to Firebase Authorized Domains.'
+        : `Sign in failed: ${error.message || 'Unknown error'}`;
+      toast.error(errorMessage);
     }
   };
 
