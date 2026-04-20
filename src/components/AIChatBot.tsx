@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageSquare, Send, X, Bot, User, Minimize2, Maximize2, Loader2, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
-import { getChatResponse } from '../services/chatService';
+import { getChatResponse, saveManualApiKey } from '../services/chatService';
 import { Expense, Income, Budget } from '../types';
 
 interface Message {
@@ -28,6 +28,8 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [manualKey, setManualKey] = useState('');
+  const [showKeyInput, setShowKeyInput] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,11 +49,25 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
     try {
       // Send history without the current message (SDK handles it)
       const response = await getChatResponse(userMessage, messages, { expenses, income, budgets });
+      
+      // If the error indicates missing key, trigger manual input
+      if (response.includes("API Key Missing") || response.includes("এপিআই কী পাওয়া যায়নি")) {
+        setShowKeyInput(true);
+      }
+      
       setMessages(prev => [...prev, { role: 'model', content: response }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'model', content: "Sorry, I hit a snag. Please try again." }]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSaveKey = () => {
+    if (saveManualApiKey(manualKey)) {
+      setShowKeyInput(false);
+      setMessages(prev => [...prev, { role: 'model', content: "✅ **সাফল্য!** আপনার এপিআই কী সেভ হয়েছে। এখন আপনি আবার চ্যাট করতে পারেন।" }]);
+      setManualKey('');
     }
   };
 
@@ -76,7 +92,7 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, y: 100, scale: 0.9, bg: 'transparent' }}
+              initial={{ opacity: 0, y: 100, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 100, scale: 0.9 }}
               className={`w-[400px] max-w-[90vw] ${isMinimized ? 'h-16' : 'h-[600px] max-h-[80vh]'} transition-all duration-300`}
@@ -128,6 +144,36 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
                               </div>
                             </motion.div>
                           ))}
+                          {showKeyInput && (
+                            <motion.div 
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="bg-zinc-900 border border-emerald-500/50 p-4 rounded-2xl flex flex-col gap-3 shadow-xl"
+                            >
+                              <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                                <Bot className="h-4 w-4" />
+                                <span>Manual Setup</span>
+                              </div>
+                              <p className="text-xs text-zinc-400">
+                                সিস্টেমের সমস্যা এড়াতে সরাসরি আপনার এপিআই কী-টি এখানে দিন। এটি কোথাও শেয়ার করা হবে না।
+                              </p>
+                              <div className="flex gap-2">
+                                <Input 
+                                  placeholder="Paste API Key here..." 
+                                  type="password"
+                                  value={manualKey}
+                                  onChange={(e) => setManualKey(e.target.value)}
+                                  className="h-10 bg-zinc-950 border-zinc-800 focus:ring-emerald-500"
+                                />
+                                <Button 
+                                  onClick={handleSaveKey}
+                                  className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950"
+                                >
+                                  Save
+                                </Button>
+                              </div>
+                            </motion.div>
+                          )}
                           {isLoading && (
                             <div className="flex justify-start">
                               <div className="flex gap-3 bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
