@@ -95,8 +95,9 @@ export default function App() {
       toast.success('Successfully signed in!');
     } catch (error: any) {
       console.error(error);
+      const currentDomain = window.location.hostname;
       const errorMessage = error.code === 'auth/unauthorized-domain' 
-        ? 'Domain not authorized. Please add your Netlify URL to Firebase Authorized Domains.'
+        ? `Domain "${currentDomain}" not authorized. Please add it to "Authorized Domains" in your Firebase Consol settings.`
         : `Sign in failed: ${error.message || 'Unknown error'}`;
       toast.error(errorMessage);
     }
