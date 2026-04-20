@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "Expense": {
+      "title": "Expense",
+      "description": "A single expense entry",
+      "type": "object",
+      "properties": {
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userName": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "isRecurring": { "type": "boolean" }
+      },
+      "required": ["amount", "category", "date", "userId"]
+    },
+    "Income": {
+      "title": "Income",
+      "description": "A single income entry",
+      "type": "object",
+      "properties": {
+        "amount": { "type": "number" },
+        "source": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
+      },
+      "required": ["amount", "source", "date", "userId"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "Monthly budget for a category",
+      "type": "object",
+      "properties": {
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "userId": { "type": "string" }
+      },
+      "required": ["category", "amount", "userId"]
+    },
+    "SavingsGoal": {
+      "title": "SavingsGoal",
+      "description": "A savings goal with target and current amount",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "targetAmount": { "type": "number" },
+        "currentAmount": { "type": "number" },
+        "deadline": { "type": "string", "format": "date" },
+        "userId": { "type": "string" }
+      },
+      "required": ["name", "targetAmount", "currentAmount", "userId"]
+    },
+    "Bill": {
+      "title": "Bill",
+      "description": "A bill reminder",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "amount": { "type": "number" },
+        "dueDate": { "type": "string", "format": "date" },
+        "category": { "type": "string" },
+        "isPaid": { "type": "boolean" },
+        "userId": { "type": "string" }
+      },
+      "required": ["name", "amount", "dueDate", "userId"]
+    }
+  },
+  "firestore": {
+    "/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Collection of all expenses"
+    },
+    "/income/{incomeId}": {
+      "schema": "Income",
+      "description": "Collection of all income entries"
+    },
+    "/budgets/{budgetId}": {
+      "schema": "Budget",
+      "description": "Collection of monthly budgets"
+    },
+    "/savingsGoals/{goalId}": {
+      "schema": "SavingsGoal",
+      "description": "Collection of savings goals"
+    },
+    "/bills/{billId}": {
+      "schema": "Bill",
+      "description": "Collection of bill reminders"
+    }
+  }
+}
