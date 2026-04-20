@@ -26,7 +26,7 @@ import {
   Download, LayoutDashboard, 
   PieChart as PieChartIcon, Settings,
   User as UserIcon, Bell, ShieldCheck,
-  Zap, BarChart3, Lock, Sparkles
+  Zap, BarChart3, Lock, Sparkles, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError, OperationType } from './lib/firestore-utils';
@@ -41,6 +41,8 @@ export default function App() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [showAuthHelp, setShowAuthHelp] = useState(false);
   const [unauthorizedDomain, setUnauthorizedDomain] = useState('');
+  const [authErrorCode, setAuthErrorCode] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -95,18 +97,34 @@ export default function App() {
   }, [user]);
 
   const handleLogin = async () => {
+    if (isAuthenticating) return;
+    setIsAuthenticating(true);
     try {
       await signInWithPopup(auth, googleProvider);
       toast.success('Successfully signed in!');
     } catch (error: any) {
-      console.error(error);
+      console.error("Auth Exception:", error);
       const currentDomain = window.location.hostname;
-      if (error.code === 'auth/unauthorized-domain') {
+      
+      const errorCode = error.code || (error.message?.includes('INTERNAL ASSERTION FAILED') ? 'auth/internal-error' : '');
+      
+      const helpErrors = [
+        'auth/unauthorized-domain', 
+        'auth/network-request-failed', 
+        'auth/popup-blocked', 
+        'auth/cancelled-popup-request',
+        'auth/internal-error'
+      ];
+
+      if (helpErrors.includes(errorCode)) {
         setUnauthorizedDomain(currentDomain);
+        setAuthErrorCode(errorCode);
         setShowAuthHelp(true);
       } else {
         toast.error(`Sign in failed: ${error.message || 'Unknown error'}`);
       }
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
@@ -225,7 +243,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500 selection:text-zinc-950">
       <Toaster position="top-center" theme="dark" richColors />
-      <AuthHelpModal isOpen={showAuthHelp} onClose={() => setShowAuthHelp(false)} domain={unauthorizedDomain} />
+      <AuthHelpModal 
+        isOpen={showAuthHelp} 
+        onClose={() => setShowAuthHelp(false)} 
+        domain={unauthorizedDomain} 
+        errorCode={authErrorCode}
+      />
       
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md">
@@ -260,8 +283,9 @@ export default function App() {
                 </div>
               </>
             ) : (
-              <Button onClick={handleLogin} className="bg-zinc-100 text-zinc-950 hover:bg-white font-bold gap-2 rounded-xl">
-                <LogIn className="h-4 w-4" /> Sign In
+              <Button onClick={handleLogin} disabled={isAuthenticating} className="bg-zinc-100 text-zinc-950 hover:bg-white font-bold gap-2 rounded-xl">
+                {isAuthenticating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />} 
+                {isAuthenticating ? 'Signing in...' : 'Sign In'}
               </Button>
             )}
           </div>
