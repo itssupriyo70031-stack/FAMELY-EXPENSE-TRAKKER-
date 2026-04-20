@@ -5,9 +5,17 @@ let ai: GoogleGenAI | null = null;
 
 function getAI() {
   if (!ai) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not set");
+    // Attempt to find the key from all possible sources
+    const apiKey = 
+      process.env.GEMINI_API_KEY || 
+      (process.env as any).USER_GEMINI_KEY ||
+      (import.meta as any).env.VITE_GEMINI_API_KEY ||
+      (import.meta as any).env.USER_GEMINI_KEY ||
+      (process.env as any).GEMINI_KEY ||
+      (process.env as any).APP_GEMINI_KEY;
+    
+    if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "") {
+      throw new Error("GEMINI_API_KEY_MISSING");
     }
     ai = new GoogleGenAI({ apiKey });
   }
@@ -26,22 +34,22 @@ export async function getChatResponse(message: string, history: any[], data: { e
         acc[e.category] = (acc[e.category] || 0) + e.amount;
         return acc;
       }, {} as Record<string, number>),
-      recentExpenses: data.expenses.slice(-5).map(e => ({ date: e.date, desc: e.description, amount: e.amount, cat: e.category }))
+      recentExpenses: data.expenses.slice(-10).map(e => ({ date: e.date, desc: e.description, amount: e.amount, cat: e.category }))
     };
 
     const systemInstruction = `
-      You are SpendWise AI, a highly sophisticated and friendly personal financial advisor. 
-      You have access to the user's current financial data:
-      ${JSON.stringify(dataSummary, null, 2)}
+      You are SpendWise AI, a personal financial advisor. 
+      Access to current user data: ${JSON.stringify(dataSummary)}
       
-      Always use Indian Rupees (₹) for currency. Be concise, expert, and encouraging.
-      Your primary task is to help users manage their money better and provide custom saving tips.
+      Requirements:
+      1. Use ₹ (INR) for amounts.
+      2. Be concise but insightful.
+      3. Focus on saving tips and budget adherence.
+      4. Language: If the user speaks in Bengali, reply in Bengali. Otherwise English.
     `;
 
-    // Flatten history and add the latest message for a single generateContent call
-    // This is often more robust than stateful chat objects in some environments
     const contents = [
-      ...history.map(h => ({
+      ...history.slice(-10).map(h => ({
         role: h.role,
         parts: [{ text: h.content }]
       })),
@@ -56,22 +64,22 @@ export async function getChatResponse(message: string, history: any[], data: { e
       contents: contents,
       config: {
         systemInstruction,
+        temperature: 0.7,
       }
     });
 
-    if (!result.text) {
-      throw new Error("Empty response from AI");
-    }
-
-    return result.text;
+    return result.text || "I processed your request but have no response. Try again?";
   } catch (error: any) {
     console.error("SpendWise AI Error:", error);
     
-    // Friendly error messages in Bengali and English
-    if (error.message?.includes('GEMINI_API_KEY')) {
-      return "দুঃখিত, আপনার GEMINI_API_KEY সেট করা নেই। দয়া করে নেটলিফাই বা এআই স্টুডিও সেটিংসে এটি চেক করুন। (Missing API Key)";
+    if (error.message === "GEMINI_API_KEY_MISSING") {
+      return "⚠️ **এপিআই কী পাওয়া যায়নি (API Key Missing)**\n\nচ্যাটবট চালানোর জন্য এপিআই কী সেট করা নেই।\n১. উপরের গিয়ার আইকন (⚙️) ক্লিক করে **Secrets**-এ যান।\n২. নাম দিন (Name): `USER_GEMINI_KEY` (এটি রিজার্ভড নয়)।\n৩. ভ্যালু দিন (Value): আপনার এপিআই কী।\n৪. এই পেজটি রিফ্রেশ করুন।";
     }
     
-    return "দুঃখিত, আমি এই মুহূর্তে আপনার প্রশ্নের উত্তর দিতে পারছি না। দয়া করে কিছুক্ষণ পর আবার চেষ্টা করুন। (Connection Error)";
+    if (error.message?.includes('API key not valid')) {
+      return "❌ **এপিআই কী সঠিক নয় (Invalid API Key)**\n\nআপনার দেওয়া কী-টি সঠিক নয়। দয়া করে [aistudio.google.com](https://aistudio.google.com/app/apikey) থেকে নতুন একটি কী নিন।";
+    }
+
+    return "⚠️ **কানেকশন সমস্যা (Connection Error)**\n\nআমি এই মুহূর্তে এআই সার্ভারের সাথে যোগাযোগ করতে পারছি না। দয়া করে কয়েক সেকেন্ড পর আবার মেসেজ দিন।";
   }
 }

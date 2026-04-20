@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageSquare, Send, X, Bot, User, Minimize2, Maximize2, Loader2 } from 'lucide-react';
+import { MessageSquare, Send, X, Bot, User, Minimize2, Maximize2, Loader2, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import ReactMarkdown from 'react-markdown';
 import { getChatResponse } from '../services/chatService';
 import { Expense, Income, Budget } from '../types';
 
@@ -121,8 +122,8 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
                                   m.role === 'user' 
                                     ? 'bg-zinc-100 text-zinc-950 rounded-tr-none' 
                                     : 'bg-zinc-900 text-zinc-100 border border-zinc-800 rounded-tl-none'
-                                } shadow-lg`}>
-                                  {m.content}
+                                } shadow-lg prose prose-invert prose-emerald max-w-none`}>
+                                  <ReactMarkdown>{m.content}</ReactMarkdown>
                                 </div>
                               </div>
                             </motion.div>
@@ -138,13 +139,24 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
                         </div>
                       </ScrollArea>
                     </CardContent>
-                    <div className="p-4 bg-zinc-900/50 border-t border-zinc-800">
+                    <div className="p-4 bg-zinc-900/50 border-t border-zinc-800 flex flex-col gap-3">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Ask anything in English or Bengali</span>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 text-zinc-500 hover:text-emerald-500" 
+                          onClick={() => setMessages([{ role: 'model', content: "Chat reset. How can I help you now?" }])}
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                        </Button>
+                      </div>
                       <form 
                         onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                         className="flex gap-2"
                       >
                         <Input 
-                          placeholder="Ask me about your budget..." 
+                          placeholder="Your message..." 
                           value={input}
                           onChange={(e) => setInput(e.target.value)}
                           className="bg-zinc-950 border-zinc-800 focus:ring-emerald-500 h-11"
