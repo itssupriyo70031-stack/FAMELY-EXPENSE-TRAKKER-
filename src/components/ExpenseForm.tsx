@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, IndianRupee } from 'lucide-react';
+import { Plus, IndianRupee, Calendar } from 'lucide-react';
 
 interface ExpenseFormProps {
   onSubmit: (data: any) => void;
@@ -24,17 +24,18 @@ export function ExpenseForm({ onSubmit }: ExpenseFormProps) {
   const [category, setCategory] = useState<Category>('Other');
   const [description, setDescription] = useState('');
   const [method, setMethod] = useState<PaymentMethod>('UPI');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !description) return;
+    if (!amount || !description || !date) return;
     
     onSubmit({
       amount: parseFloat(amount),
       category,
       description,
       paymentMethod: method,
-      date: new Date().toISOString(),
+      date: new Date(date).toISOString(),
       isRecurring: false
     });
     
@@ -47,12 +48,12 @@ export function ExpenseForm({ onSubmit }: ExpenseFormProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button className="bg-zinc-100 text-zinc-950 hover:bg-white font-semibold gap-2" />
+          <Button className="bg-rose-500 hover:bg-rose-600 text-white font-bold h-12 px-6 rounded-2xl gap-2 shadow-lg shadow-rose-500/20 transition-all hover:scale-105 active:scale-95" />
         }
       >
-        <Plus className="h-4 w-4" /> Add Expense
+        <Plus className="h-4 w-4" /> Add Outflow
       </DialogTrigger>
-      <DialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100">
+      <DialogContent className="bg-zinc-950 border-zinc-900 text-zinc-100 rounded-[2.5rem] shadow-2xl">
         <DialogHeader>
           <DialogTitle>Add New Expense</DialogTitle>
         </DialogHeader>
@@ -112,6 +113,21 @@ export function ExpenseForm({ onSubmit }: ExpenseFormProps) {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="date">Transaction Date</Label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+              <Input
+                id="date"
+                type="date"
+                className="pl-10 bg-zinc-900 border-zinc-800 [color-scheme:dark]"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
             </div>
           </div>
 

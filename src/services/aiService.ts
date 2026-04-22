@@ -1,18 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
 import { Expense, Income, Budget } from "../types";
-
-let ai: GoogleGenAI | null = null;
-
-function getAI() {
-  if (!ai) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not set");
-    }
-    ai = new GoogleGenAI({ apiKey });
-  }
-  return ai;
-}
+import { getAI } from "./aiClient";
 
 export async function getFinancialInsights(expenses: Expense[], income: Income[], budgets: Budget[]) {
   try {

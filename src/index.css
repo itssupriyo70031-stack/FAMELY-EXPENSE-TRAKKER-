@@ -1,46 +1,60 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
-  --radius-lg: 0.75rem;
-  --radius-md: calc(0.75rem - 2px);
-  --radius-sm: calc(0.75rem - 4px);
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Outfit", sans-serif;
+  
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
 }
 
 @layer base {
   :root {
-    --background: oklch(0.145 0 0);
+    --background: oklch(0.1 0 0);
     --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
+    --card: oklch(0.15 0 0 / 0.5);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
+    --popover: oklch(0.15 0 0 / 0.95);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
+    --primary: oklch(0.7 0.2 160);
+    --primary-foreground: oklch(0.1 0 0);
+    --secondary: oklch(0.2 0 0);
     --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
+    --muted: oklch(0.2 0 0);
+    --muted-foreground: oklch(0.7 0 0);
+    --accent: oklch(0.2 0 0);
     --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
+    --destructive: oklch(0.6 0.25 25);
     --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
+    --input: oklch(1 0 0 / 5%);
+    --ring: oklch(0.7 0.2 160 / 0.5);
   }
 
   * {
-    @apply border-zinc-800;
+    @apply border-zinc-800/60;
   }
+  
   body {
-    @apply bg-zinc-950 text-zinc-100 font-sans;
+    @apply bg-zinc-950 text-zinc-100 antialiased selection:bg-emerald-500 selection:text-zinc-950;
+  }
+}
+
+@layer utilities {
+  .card-premium {
+    @apply rounded-[2rem] border border-zinc-900 bg-zinc-950/40 hover:bg-zinc-900/40 transition-all duration-500 backdrop-blur-sm;
+  }
+  .stat-card {
+    @apply rounded-[1.5rem] border border-zinc-900 bg-zinc-950 p-5 md:p-8 space-y-3 shadow-2xl transition-all hover:scale-[1.02] active:scale-95 duration-300;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 

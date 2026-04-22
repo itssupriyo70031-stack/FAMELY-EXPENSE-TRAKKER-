@@ -17,7 +17,10 @@ import { BillForm } from './components/BillForm';
 import { BillReminder } from './components/BillReminder';
 import { BudgetSettings } from './components/BudgetSettings';
 import { AIChatBot } from './components/AIChatBot';
+import { CalendarExplorer } from './components/CalendarExplorer';
 import { AuthHelpModal } from './components/AuthHelpModal';
+import { IncomeList } from './components/IncomeList';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
@@ -26,7 +29,8 @@ import {
   Download, LayoutDashboard, 
   PieChart as PieChartIcon, Settings,
   User as UserIcon, Bell, ShieldCheck,
-  Zap, BarChart3, Lock, Sparkles, Loader2
+  Zap, BarChart3, Lock, Sparkles, Loader2, Target,
+  TrendingUp, TrendingDown, CalendarDays
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { handleFirestoreError, OperationType } from './lib/firestore-utils';
@@ -43,6 +47,7 @@ export default function App() {
   const [unauthorizedDomain, setUnauthorizedDomain] = useState('');
   const [authErrorCode, setAuthErrorCode] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -157,6 +162,15 @@ export default function App() {
     }
   };
 
+  const deleteIncome = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'income', id));
+      toast.success('Income source removed');
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, 'income');
+    }
+  };
+
   const addIncome = async (data: any) => {
     if (!user) return;
     try {
@@ -241,8 +255,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500 selection:text-zinc-950">
-      <Toaster position="top-center" theme="dark" richColors />
+    <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500 selection:text-zinc-950">
+      <Toaster position="top-right" theme="dark" richColors />
       <AuthHelpModal 
         isOpen={showAuthHelp} 
         onClose={() => setShowAuthHelp(false)} 
@@ -250,215 +264,274 @@ export default function App() {
         errorCode={authErrorCode}
       />
       
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 group cursor-default">
-            <div className="h-9 w-9 bg-emerald-500 rounded-xl flex items-center justify-center transform transition-all group-hover:rotate-12 group-hover:scale-110">
-              <IndianRupee className="h-5 w-5 text-zinc-950 font-bold" />
+      {user ? (
+        <div className="flex min-h-screen w-full relative">
+          {/* Desktop Navigation Sidebar */}
+          <aside className="w-64 border-r border-zinc-900 bg-zinc-950 hidden lg:flex flex-col fixed inset-y-0 z-50">
+            <div className="p-8 flex items-center gap-3">
+              <div className="h-9 w-9 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                <IndianRupee className="h-5 w-5 text-zinc-950 font-bold" />
+              </div>
+              <h1 className="text-xl font-bold tracking-tighter">SpendWise</h1>
             </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">SpendWise</h1>
-              <p className="text-[10px] text-zinc-500 font-mono -mt-1 uppercase tracking-widest">Financial OS</p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-4">
-            {user ? (
-              <>
-                <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800">
-                  <div className="h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-zinc-950">
-                    {user.displayName?.charAt(0)}
-                  </div>
-                  <span className="text-sm font-medium">{user.displayName}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <BillForm onSubmit={addBill} />
-                  <Button variant="ghost" size="icon" onClick={exportCSV} className="text-zinc-400 hover:text-white hover:bg-zinc-900">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={handleLogout} className="text-zinc-400 hover:text-rose-500 hover:bg-rose-500/10">
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <Button onClick={handleLogin} disabled={isAuthenticating} className="bg-zinc-100 text-zinc-950 hover:bg-white font-bold gap-2 rounded-xl">
-                {isAuthenticating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />} 
-                {isAuthenticating ? 'Signing in...' : 'Sign In'}
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <AnimatePresence mode="wait">
-          {!user ? (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="py-12 md:py-24"
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div className="space-y-8">
-                  <motion.div 
-                    initial={{ x: -20, opacity: 0 }} 
-                    animate={{ x: 0, opacity: 1 }} 
-                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20"
-                  >
-                    <Zap className="h-3 w-3 text-emerald-500" />
-                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">AI Powered OS v2.0</span>
-                  </motion.div>
-                  
-                  <motion.h2 
-                    initial={{ y: 20, opacity: 0 }} 
-                    animate={{ y: 0, opacity: 1 }} 
-                    transition={{ delay: 0.1 }}
-                    className="text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9]"
-                  >
-                    Master your money with <span className="text-emerald-500 underline decoration-zinc-800">precision</span>.
-                  </motion.h2>
-                  
-                  <motion.p 
-                    initial={{ y: 20, opacity: 0 }} 
-                    animate={{ y: 0, opacity: 1 }} 
-                    transition={{ delay: 0.2 }}
-                    className="text-zinc-400 text-lg max-w-md leading-relaxed"
-                  >
-                    The advanced monthly financial tracker designed for clarity, automated insights, and absolute control over your wealth.
-                  </motion.p>
-                  
-                  <motion.div 
-                    initial={{ y: 20, opacity: 0 }} 
-                    animate={{ y: 0, opacity: 1 }} 
-                    transition={{ delay: 0.3 }}
-                    className="flex flex-col sm:flex-row gap-4"
-                  >
-                    <Button onClick={handleLogin} size="lg" className="bg-zinc-100 text-zinc-950 hover:bg-white font-bold h-14 px-8 text-lg rounded-2xl gap-3">
-                      <LogIn className="h-5 w-5" /> Get Started Now
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="lg" 
-                      onClick={() => window.open('https://github.com', '_blank')}
-                      className="border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900 h-14 px-8 text-lg rounded-2xl"
-                    >
-                       View Documentation
-                    </Button>
-                  </motion.div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-8 border-t border-zinc-900">
-                    {[
-                      { label: "Data Security", icon: Lock, val: "256-bit" },
-                      { label: "AI Insights", icon: Sparkles, val: "Gemini 3" },
-                      { label: "Accuracy", icon: BarChart3, val: "100%" }
-                    ].map((item, i) => (
-                      <div key={i} className="space-y-1">
-                        <div className="flex items-center gap-2 text-zinc-500">
-                          <item.icon className="h-3 w-3" />
-                          <span className="text-[10px] uppercase font-bold tracking-widest">{item.label}</span>
-                        </div>
-                        <p className="text-zinc-100 font-bold">{item.val}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <motion.div 
-                  initial={{ scale: 0.8, opacity: 0, rotate: -5 }} 
-                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                  transition={{ type: 'spring', damping: 20 }}
-                  className="relative group lg:ml-auto"
+            <nav className="flex-1 px-4 space-y-1 mt-4">
+              {[
+                { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                { id: 'transactions', label: 'Ledger', icon: BarChart3 },
+                { id: 'explorer', label: 'Explorer', icon: CalendarDays },
+                { id: 'planning', label: 'Blueprint', icon: Target },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl transition-all font-semibold ${
+                    activeTab === item.id 
+                      ? 'bg-zinc-900/50 text-emerald-400 border border-zinc-800/10' 
+                      : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/30'
+                  }`}
                 >
-                  <div className="absolute -inset-1 bg-emerald-500/20 rounded-3xl blur-2xl group-hover:bg-emerald-500/30 transition-all" />
-                  <div className="relative bg-zinc-900 border border-zinc-800 p-8 rounded-3xl shadow-2xl space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="h-6 w-12 bg-zinc-800 rounded-full" />
-                      <div className="h-8 w-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                        <BarChart3 className="h-4 w-4 text-emerald-500" />
+                  <item.icon className="h-4 w-4" />
+                  <span className="text-sm font-bold">{item.label}</span>
+                </button>
+              ))}
+            </nav>
+
+            <div className="p-6 border-t border-zinc-900 mt-auto">
+              <div className="bg-zinc-900/40 rounded-2xl p-4 border border-zinc-800/30">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-xs font-bold text-zinc-950 shadow-lg shadow-emerald-500/10">
+                    {user?.displayName?.charAt(0) || 'U'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold truncate text-zinc-200">{user?.displayName || 'User'}</p>
+                    <p className="text-[10px] text-zinc-500 truncate uppercase tracking-widest mt-0.5">Primary Node</p>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start h-11 text-xs gap-3 text-zinc-500 hover:text-rose-500 hover:bg-rose-500/5 rounded-xl border border-zinc-800/30 hover:border-rose-500/20 transition-all font-bold uppercase tracking-widest" 
+                  onClick={handleLogout}
+                >
+                   <LogOut className="h-3.5 w-3.5" /> Deactivate
+                </Button>
+              </div>
+            </div>
+          </aside>
+
+          {/* Mobile Bottom Navigation (Responsive Height & Safe Area) */}
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-zinc-950/80 backdrop-blur-3xl border-t border-zinc-900/50 flex items-center justify-around h-20 z-50 px-6 pb-2 shadow-[0_-20px_60px_rgba(0,0,0,0.8)]">
+            {[
+              { id: 'overview', label: 'Hub', icon: LayoutDashboard },
+              { id: 'transactions', label: 'Ledger', icon: BarChart3 },
+              { id: 'explorer', label: 'Cal', icon: CalendarDays },
+              { id: 'planning', label: 'Plan', icon: Target },
+            ].map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex flex-col items-center gap-2 transition-all flex-1 py-1 relative ${
+                    isActive ? 'text-emerald-400' : 'text-zinc-600'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div 
+                      layoutId="nav-pill" 
+                      className="absolute -top-1 h-1 w-10 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)]" 
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <item.icon className={`h-6 w-6 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ''} transition-all`} />
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em]">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Main Content Area (Layout Guarded) */}
+          <div className="flex-1 lg:ml-64 relative min-h-screen">
+            <main className="max-w-[1400px] mx-auto p-6 sm:p-10 md:p-12 space-y-10 md:space-y-16 pb-32 lg:pb-16 overflow-x-hidden">
+              <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 pb-10 border-b border-zinc-900/80">
+                 <div className="flex justify-between items-center w-full md:w-auto">
+                    <div className="space-y-1.5">
+                      <h2 className="text-4xl md:text-6xl font-black tracking-tighter capitalize text-zinc-100">{activeTab}</h2>
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        <p className="text-[10px] md:text-[11px] text-zinc-500 uppercase tracking-[0.4em] font-bold">Terminal Interface Sync</p>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="h-4 w-full bg-zinc-800 rounded animate-pulse" />
-                      <div className="h-4 w-2/3 bg-zinc-800 rounded animate-pulse" />
+                    {/* Mobile LogOut for even more convenience if needed, but we have bottom nav. 
+                        Let's keep it for tablet/desktop consistency */}
+                    <div className="lg:hidden flex items-center gap-2">
+                       {/* Space for additional mobile-only head icons if needed */}
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[1, 2, 3].map(i => <div key={i} className={`h-20 rounded-xl bg-zinc-800/50 flex flex-col justify-end p-2`}><div className={`w-full bg-emerald-500 rounded-lg h-${i*4}`} /></div>)}
+                 </div>
+                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 no-scrollbar">
+                   <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={exportCSV} 
+                    className="border-zinc-800 bg-zinc-950/50 text-zinc-400 h-12 px-6 rounded-2xl gap-3 hover:bg-zinc-900 hover:text-zinc-100 shrink-0 font-bold text-xs border-dashed"
+                   >
+                      <Download className="h-4 w-4" /> <span>Export Ledger</span>
+                   </Button>
+                   <IncomeForm onSubmit={addIncome} />
+                   <ExpenseForm onSubmit={addExpense} />
+                 </div>
+              </header>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, scale: 0.98, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 1.02, y: -20 }}
+                  transition={{ duration: 0.4, ease: [0.19, 1, 0.22, 1] }}
+                  className="w-full"
+                >
+                  {activeTab === 'overview' && (
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 md:gap-14 items-start">
+                      <div className="xl:col-span-8 space-y-12 md:space-y-16">
+                        <Dashboard expenses={expenses} income={income} budgets={budgets} />
+                      </div>
+                      <div className="xl:col-span-4 lg:sticky lg:top-12 space-y-12">
+                        <AIInsights expenses={expenses} income={income} budgets={budgets} />
+                        <div className="p-8 bg-zinc-900/20 border border-zinc-900 rounded-[2.5rem] relative group overflow-hidden">
+                          <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-4 flex items-center gap-2">
+                            <ShieldCheck className="h-3 w-3" /> System Integrity
+                          </h4>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between text-xs font-mono">
+                              <span className="text-zinc-600">ENCRYPTION:</span>
+                              <span className="text-emerald-500 font-bold">AES-256</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs font-mono">
+                              <span className="text-zinc-600">LATENCY:</span>
+                              <span className="text-emerald-500 font-bold">14ms</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs font-mono">
+                              <span className="text-zinc-600">UPLINK:</span>
+                              <span className="text-emerald-500 font-bold">ACTIVE</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="p-4 rounded-xl bg-emerald-500 text-zinc-950 font-bold text-center">
-                      Analysis Complete
+                  )}
+
+                  {activeTab === 'explorer' && (
+                    <CalendarExplorer expenses={expenses} income={income} />
+                  )}
+
+                  {activeTab === 'transactions' && (
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 md:gap-12 items-start">
+                      <div className="space-y-6">
+                         <div className="flex items-center gap-3 px-2">
+                           <div className="h-8 w-8 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                             <TrendingDown className="h-4 w-4" />
+                           </div>
+                           <h3 className="text-xl font-bold tracking-tight">Withdrawal Hub</h3>
+                         </div>
+                         <ExpenseList expenses={expenses} onDelete={deleteExpense} />
+                      </div>
+                      <div className="space-y-6">
+                         <div className="flex items-center gap-3 px-2">
+                           <div className="h-8 w-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                             <TrendingUp className="h-4 w-4" />
+                           </div>
+                           <h3 className="text-xl font-bold tracking-tight">Deposit Hub</h3>
+                         </div>
+                         <IncomeList income={income} onDelete={deleteIncome} />
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {activeTab === 'planning' && (
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 lg:gap-16">
+                      <div className="xl:col-span-8 space-y-10 md:space-y-14">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14">
+                          <div className="space-y-6">
+                            <div className="flex items-center justify-between px-2 bg-zinc-900/50 p-4 rounded-3xl border border-zinc-900/50">
+                              <div>
+                                <h3 className="text-lg font-bold">Capital Vault</h3>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Asset Allocation</p>
+                              </div>
+                              <SavingsGoalForm onSubmit={addGoal} />
+                            </div>
+                            <SavingsGoalList goals={goals} />
+                          </div>
+                          <div className="space-y-6">
+                            <div className="px-2 bg-zinc-900/50 p-4 rounded-3xl border border-zinc-900/50">
+                              <h3 className="text-lg font-bold">Scheduled Flux</h3>
+                              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Recurring Obligations</p>
+                            </div>
+                            <BillReminder bills={bills} onMarkPaid={markBillPaid} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="xl:col-span-4 space-y-10 border-l-0 xl:border-l border-zinc-900/50 pt-10 xl:pt-4 xl:pl-12">
+                        <BudgetSettings budgets={budgets} onSave={saveBudget} />
+                      </div>
+                    </div>
+                  )}
                 </motion.div>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8"
-            >
-              {/* Left Column - Main Content */}
-              <div className="lg:col-span-8 space-y-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Financial Overview</h2>
-                    <p className="text-zinc-400">Track your income, expenses, and savings in real-time.</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <IncomeForm onSubmit={addIncome} />
-                    <ExpenseForm onSubmit={addExpense} />
-                  </div>
-                </div>
+              </AnimatePresence>
 
-                <Dashboard expenses={expenses} income={income} budgets={budgets} />
-                
-                <ExpenseList expenses={expenses} onDelete={deleteExpense} />
-              </div>
-
-              {/* Right Column - Sidebar */}
-              <div className="lg:col-span-4 space-y-8">
-                <AIInsights expenses={expenses} income={income} budgets={budgets} />
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-bold">Goals & Bills</h3>
-                    <SavingsGoalForm onSubmit={addGoal} />
-                  </div>
-                  <SavingsGoalList goals={goals} />
-                  <BillReminder bills={bills} onMarkPaid={markBillPaid} />
-                </div>
-
-                <div className="pt-4 border-t border-zinc-800">
-                  <BudgetSettings budgets={budgets} onSave={saveBudget} />
-                </div>
-              </div>
-
-              {/* Persistent Chat */}
+              {/* Bot Controller */}
               <AIChatBot expenses={expenses} income={income} budgets={budgets} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+            </main>
+          </div>
+          </div>
+      ) : (
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-12">
+           <div className="h-20 w-20 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center shadow-[0_20px_50px_rgba(16,185,129,0.3)] mb-4">
+              <IndianRupee className="h-10 w-10 text-zinc-950 font-bold" />
+           </div>
+           <div className="space-y-4 max-w-xl">
+             <h1 className="text-6xl md:text-8xl font-black tracking-tighter bg-gradient-to-b from-white to-zinc-500 bg-clip-text text-transparent">SpendWise</h1>
+             <p className="text-zinc-500 text-xl md:text-2xl leading-relaxed max-w-lg mx-auto">
+               The autonomous financial OS for modern wealth management and systematic cash-flow optimization.
+             </p>
+           </div>
+           <Button 
+             size="lg" 
+             onClick={handleLogin} 
+             disabled={isAuthenticating}
+             className="bg-zinc-100 text-zinc-950 hover:bg-white h-16 px-12 rounded-2xl font-bold text-xl transition-all hover:scale-105 active:scale-95 gap-3"
+           >
+             {isAuthenticating ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogIn className="h-5 w-5" />} 
+             Access Dashboard
+           </Button>
+           
+           <div className="grid grid-cols-2 md:grid-cols-3 gap-12 pt-12 opacity-40">
+              {[
+                { icon: ShieldCheck, label: "Hardened Auth" },
+                { icon: Zap, label: "Real-time Sync" },
+                { icon: Sparkles, label: "Native AI" }
+              ].map((f, i) => (
+                <div key={i} className="flex flex-col items-center gap-2">
+                   <f.icon className="h-5 w-5" />
+                   <span className="text-[10px] uppercase font-bold tracking-widest">{f.label}</span>
+                </div>
+              ))}
+           </div>
+        </main>
+      )}
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-800 py-12 mt-20 bg-zinc-900/30">
-        <div className="max-w-7xl mx-auto px-4">
+      {/* Footer (Simplified) */}
+      <footer className="border-t border-zinc-900 py-12 mt-auto w-full">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2 opacity-50">
               <IndianRupee className="h-4 w-4" />
-              <span className="text-sm font-bold tracking-tight uppercase">SpendWise</span>
+              <span className="text-xs font-bold tracking-widest uppercase">SpendWise Registry</span>
             </div>
-            <p className="text-zinc-500 text-sm">
-              © 2026 SpendWise. All rights reserved. Secure Cloud Storage by Firebase.
+            <p className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">
+              © 2026 Secured via Firebase • Cloud Native
             </p>
-            <div className="flex gap-6 text-sm text-zinc-500">
-              <a href="#" className="hover:text-emerald-500 transition-colors">Privacy</a>
-              <a href="#" className="hover:text-emerald-500 transition-colors">Terms</a>
-              <a href="#" className="hover:text-emerald-500 transition-colors">Support</a>
-            </div>
           </div>
         </div>
       </footer>

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, IndianRupee, TrendingUp } from 'lucide-react';
+import { Plus, IndianRupee, TrendingUp, Calendar } from 'lucide-react';
 
 interface IncomeFormProps {
   onSubmit: (data: any) => void;
@@ -13,15 +13,16 @@ export function IncomeForm({ onSubmit }: IncomeFormProps) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [source, setSource] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !source) return;
+    if (!amount || !source || !date) return;
     
     onSubmit({
       amount: parseFloat(amount),
       source,
-      date: new Date().toISOString()
+      date: new Date(date).toISOString()
     });
     
     setAmount('');
@@ -33,12 +34,12 @@ export function IncomeForm({ onSubmit }: IncomeFormProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="outline" className="border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900 gap-2" />
+          <Button className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold h-12 px-6 rounded-2xl gap-2 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95" />
         }
       >
-        <TrendingUp className="h-4 w-4" /> Add Income
+        <TrendingUp className="h-4 w-4" /> Add Revenue
       </DialogTrigger>
-      <DialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100">
+      <DialogContent className="bg-zinc-950 border-zinc-900 text-zinc-100 rounded-[2.5rem] shadow-2xl">
         <DialogHeader>
           <DialogTitle>Add Monthly Income</DialogTitle>
         </DialogHeader>
@@ -69,6 +70,21 @@ export function IncomeForm({ onSubmit }: IncomeFormProps) {
               onChange={(e) => setSource(e.target.value)}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="date">Transaction Date</Label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+              <Input
+                id="date"
+                type="date"
+                className="pl-10 bg-zinc-900 border-zinc-800 [color-scheme:dark]"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
           <Button type="submit" className="w-full bg-emerald-600 text-white hover:bg-emerald-500 mt-4">
