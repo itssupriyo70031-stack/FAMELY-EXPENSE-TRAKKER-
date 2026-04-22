@@ -105,10 +105,15 @@ export function AIInsights({ expenses, income, budgets }: AIInsightsProps) {
               ))}
             </motion.div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 opacity-20 space-y-4 grayscale">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.2 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center py-16 space-y-4 grayscale"
+            >
               <Sparkles className="h-10 w-10 text-zinc-500" />
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-center">Syncing Analysis...</p>
-            </div>
+            </motion.div>
           )}
         </AnimatePresence>
       </CardContent>

@@ -96,9 +96,9 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
               initial={{ opacity: 0, scale: 0.8, y: 100 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 100 }}
-              className={`glass-dark w-[400px] max-w-[95vw] ${isMinimized ? 'h-20' : 'h-[650px] max-h-[85vh]'} rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,1)] overflow-hidden flex flex-col transition-all duration-500 origin-bottom-right border border-zinc-700/50`}
+              className={`bg-zinc-950 w-[400px] max-w-[95vw] ${isMinimized ? 'h-20' : 'h-[650px] max-h-[85vh]'} rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,1)] overflow-hidden flex flex-col transition-all duration-500 origin-bottom-right border border-zinc-700/50`}
             >
-              <CardHeader className="p-6 border-b border-zinc-800/50 flex flex-row items-center justify-between space-y-0 bg-zinc-900/30">
+              <CardHeader className="p-6 border-b border-zinc-800/50 flex flex-row items-center justify-between space-y-0 bg-zinc-900">
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.1)]">
                     <Sparkles className="h-5 w-5 text-emerald-400" />
@@ -122,7 +122,7 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
               </CardHeader>
               
               {!isMinimized && (
-                <>
+                <div className="flex-1 flex flex-col overflow-hidden">
                   <CardContent className="flex-1 overflow-hidden p-0 relative">
                     <ScrollArea className="h-full p-6" ref={scrollRef}>
                       <div className="space-y-6 pb-4">
@@ -141,7 +141,7 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
                               <div className={`p-4 rounded-3xl text-sm leading-relaxed ${
                                 m.role === 'user' 
                                   ? 'bg-zinc-100 text-zinc-950 rounded-tr-none font-medium' 
-                                  : 'bg-zinc-900/50 text-zinc-100 border border-zinc-800 rounded-tl-none font-medium'
+                                  : 'bg-zinc-900 text-zinc-100 border border-zinc-800 rounded-tl-none font-medium'
                               } shadow-xl prose prose-invert prose-emerald max-w-none`}>
                                 <ReactMarkdown>{m.content}</ReactMarkdown>
                               </div>
@@ -153,7 +153,7 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
                           <motion.div 
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="glass p-6 rounded-3xl flex flex-col gap-4 border-emerald-500/30"
+                            className="bg-zinc-900 p-6 rounded-3xl flex flex-col gap-4 border border-emerald-500/30"
                           >
                             <div className="flex items-center gap-2 text-emerald-400 text-[10px] font-bold uppercase tracking-[0.2em]">
                               <RotateCcw className="h-4 w-4" />
@@ -180,7 +180,7 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
                         
                         {isLoading && (
                           <div className="flex justify-start">
-                            <div className="flex gap-3 bg-zinc-900/30 p-4 rounded-3xl border border-zinc-800 animate-pulse">
+                            <div className="flex gap-3 bg-zinc-900 p-4 rounded-3xl border border-zinc-800 animate-pulse">
                               <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
                               <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Processing neural data...</span>
                             </div>
@@ -189,7 +189,7 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
                       </div>
                     </ScrollArea>
                   </CardContent>
-                  <div className="p-6 pt-2 bg-zinc-900/30 border-t border-zinc-800/50">
+                  <div className="p-6 pt-2 bg-zinc-900 border-t border-zinc-800/50">
                     <form 
                       onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                       className="relative"
@@ -198,7 +198,7 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
                         placeholder="Establish neural link..." 
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        className="bg-zinc-950/80 border-zinc-800/80 focus:ring-emerald-500 h-14 rounded-2xl pr-14 pl-5 text-sm font-medium transition-all"
+                        className="bg-zinc-950 border-zinc-800/80 focus:ring-emerald-500 h-14 rounded-2xl pr-14 pl-5 text-sm font-medium transition-all"
                       />
                       <Button 
                         type="submit" 
@@ -215,7 +215,7 @@ export function AIChatBot({ expenses, income, budgets }: AIChatBotProps) {
                          </div>
                     </div>
                   </div>
-                </>
+                </div>
               )}
             </motion.div>
           )}

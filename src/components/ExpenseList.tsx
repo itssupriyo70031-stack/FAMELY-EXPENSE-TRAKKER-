@@ -101,9 +101,14 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
                   </motion.div>
                 ))
               ) : (
-                <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.3 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center py-20"
+                >
                   <p className="text-xs font-bold uppercase tracking-widest">No Records Found</p>
-                </div>
+                </motion.div>
               )}
             </AnimatePresence>
           </div>

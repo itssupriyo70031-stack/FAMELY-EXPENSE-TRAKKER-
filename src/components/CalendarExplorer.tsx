@@ -75,53 +75,52 @@ export function CalendarExplorer({ expenses, income }: CalendarExplorerProps) {
             <ScrollArea className="h-full">
               <div className="divide-y divide-zinc-800/50">
                 <AnimatePresence mode="popLayout">
-                  {[...selectedExpenses, ...selectedIncome].length > 0 ? (
-                    <>
-                      {selectedIncome.map((item) => (
-                        <motion.div
-                          key={`income-${item.id}`}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          className="flex items-center justify-between p-4 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                              <TrendingUp className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-zinc-200">{item.source}</p>
-                              <p className="text-[10px] uppercase tracking-widest text-emerald-500/60 font-bold">Revenue Inflow</p>
-                            </div>
-                          </div>
-                          <p className="font-mono font-bold text-emerald-400 tracking-tighter">+{formatCurrency(item.amount)}</p>
-                        </motion.div>
-                      ))}
-                      {selectedExpenses.map((expense) => (
-                        <motion.div
-                          key={`expense-${expense.id}`}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          className="flex items-center justify-between p-4 hover:bg-zinc-900/50 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-zinc-900 flex items-center justify-center text-white">
-                              {getPaymentIcon(expense.paymentMethod)}
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-zinc-200">{expense.description}</p>
-                              <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">{expense.category}</p>
-                            </div>
-                          </div>
-                          <p className="font-mono font-bold text-rose-400 tracking-tighter">-{formatCurrency(expense.amount)}</p>
-                        </motion.div>
-                      ))}
-                    </>
-                  ) : (
+                  {selectedIncome.map((item) => (
                     <motion.div
+                      key={`income-${item.id}`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="flex items-center justify-between p-4 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                          <TrendingUp className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-zinc-200">{item.source}</p>
+                          <p className="text-[10px] uppercase tracking-widest text-emerald-500/60 font-bold">Revenue Inflow</p>
+                        </div>
+                      </div>
+                      <p className="font-mono font-bold text-emerald-400 tracking-tighter">+{formatCurrency(item.amount)}</p>
+                    </motion.div>
+                  ))}
+                  {selectedExpenses.map((expense) => (
+                    <motion.div
+                      key={`expense-${expense.id}`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="flex items-center justify-between p-4 hover:bg-zinc-900/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-zinc-900 flex items-center justify-center text-white">
+                          {getPaymentIcon(expense.paymentMethod)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-zinc-200">{expense.description}</p>
+                          <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">{expense.category}</p>
+                        </div>
+                      </div>
+                      <p className="font-mono font-bold text-rose-400 tracking-tighter">-{formatCurrency(expense.amount)}</p>
+                    </motion.div>
+                  ))}
+                  {selectedExpenses.length === 0 && selectedIncome.length === 0 && (
+                    <motion.div
+                      key="empty-state"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 0.3 }}
+                      exit={{ opacity: 0 }}
                       className="flex flex-col items-center justify-center py-20"
                     >
                       <IndianRupee className="h-10 w-10 mb-4 text-zinc-500" />

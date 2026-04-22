@@ -31,9 +31,14 @@ export function IncomeList({ income, onDelete }: IncomeListProps) {
           <div className="divide-y divide-zinc-800/50">
             <AnimatePresence initial={false}>
               {income.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 opacity-30">
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.3 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center py-24"
+                >
                   <p className="text-xs font-bold uppercase tracking-widest">No Income Found</p>
-                </div>
+                </motion.div>
               ) : (
                 income.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((item, i) => (
                   <motion.div 
